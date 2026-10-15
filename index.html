@@ -1,343 +1,537 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="description" content="ColorStudio Pro —— 纯原生 JavaScript 实现的专业级网页颜色工具，参考 Photoshop / Figma / Adobe Color 设计" />
-  <title>ColorStudio Pro · 专业颜色工具</title>
-
-  <!-- 全局样式表 -->
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- 网站图标（使用内联 SVG 作为 favicon，避免额外资源请求） -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23ff5f57'/%3E%3C/svg%3E" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ColorStudio Pro - 专业色彩识别 · 调色 · 配色 · 吸色工具</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- ============================================================
-       整体应用容器
-       ============================================================ -->
-  <div id="app" class="app">
 
-    <!-- ========================= 顶部标题栏 ========================= -->
-    <header class="app-header">
-      <div class="app-header__brand">
-        <svg class="app-header__logo" width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
-          <circle cx="14" cy="14" r="13" fill="url(#logoGradient)"></circle>
-          <defs>
-            <linearGradient id="logoGradient" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-              <stop offset="0" stop-color="#ff5f6d"></stop>
-              <stop offset="0.5" stop-color="#7367f0"></stop>
-              <stop offset="1" stop-color="#00d4ff"></stop>
-            </linearGradient>
-          </defs>
-        </svg>
-        <h1 class="app-header__title">ColorStudio <span class="app-header__title-accent">Pro</span></h1>
+<!-- ============ 顶部栏 ============ -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-logo">
+      <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
+        <defs>
+          <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#FF5F6D"/>
+            <stop offset="0.5" stop-color="#1677FF"/>
+            <stop offset="1" stop-color="#2EE6A6"/>
+          </linearGradient>
+        </defs>
+        <circle cx="16" cy="16" r="14" fill="url(#lg1)"/>
+        <circle cx="16" cy="16" r="6" fill="#fff" opacity="0.9"/>
+      </svg>
+    </div>
+    <div class="brand-text">
+      <strong>ColorStudio <span>Pro</span></strong>
+      <em>专业色彩识别 · 调色 · 配色 · 吸色工具</em>
+    </div>
+  </div>
+
+  <div class="top-current" title="当前颜色">
+    <span class="top-current-dot" id="top-color-dot"></span>
+    <span class="top-current-name" id="top-color-name">—</span>
+    <code class="top-current-hex" id="top-color-hex">#1677FF</code>
+  </div>
+
+  <div class="top-actions">
+    <button class="btn" id="btn-import-image">
+      <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M5 20h14a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1Zm2-3 4-5 3 3.5 2.5-3L19 17H7Zm1.5-9a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/></svg>
+      导入图片
+    </button>
+    <button class="btn" id="btn-screen-picker">
+      <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 2v6l5-3a8 8 0 0 0-5-3Z"/></svg>
+      屏幕吸色
+    </button>
+    <div class="dropdown">
+      <button class="btn" id="btn-export">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3a1 1 0 1 1 1.4 1.4l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.4L11 13.6V4a1 1 0 0 1 1-1ZM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg>
+        导出
+        <svg viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="m7 10 5 5 5-5H7Z"/></svg>
+      </button>
+      <div class="dropdown-menu" id="export-menu">
+        <button data-export="png">导出 PNG 色板图</button>
+        <button data-export="svg">导出 SVG 矢量色板</button>
+        <button data-export="json">导出 JSON 色板</button>
+        <button data-export="css">导出 CSS 样式</button>
+        <button data-export="txt">导出 TXT 文本</button>
+        <button data-export="gpl">导出 GPL 色板 (GIMP)</button>
+        <button data-export="ase">导出 ASE 色板 (Adobe)</button>
+        <div class="dropdown-sep"></div>
+        <button data-export="backup">导出全部数据备份 (JSON)</button>
       </div>
+    </div>
+    <button class="btn icon-only" id="btn-settings" title="设置">
+      <svg viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm9 4a7.5 7.5 0 0 0-.1-1.3l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-2.2-1.3L18 2.6h-4l-.3 2.5a7.6 7.6 0 0 0-2.2 1.3l-2.4-1-2 3.4 2 1.6a7.6 7.6 0 0 0 0 2.6l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 2.2 1.3l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 2.2-1.3l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.3Z"/></svg>
+    </button>
+    <button class="btn icon-only" id="theme-toggle" title="切换深色 / 浅色模式">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="17" height="17"><path fill="currentColor" d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0-5a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1Zm0 17a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1ZM4.2 4.2a1 1 0 0 1 1.4 0l1.4 1.4a1 1 0 1 1-1.4 1.4L4.2 5.6a1 1 0 0 1 0-1.4Zm12.8 12.8a1 1 0 0 1 1.4 0l1.4 1.4a1 1 0 0 1-1.4 1.4l-1.4-1.4a1 1 0 0 1 0-1.4ZM2 12a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1Zm17 0a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2h-2a1 1 0 0 1-1-1ZM4.2 19.8a1 1 0 0 1 0-1.4l1.4-1.4a1 1 0 1 1 1.4 1.4l-1.4 1.4a1 1 0 0 1-1.4 0ZM17 7a1 1 0 0 1 0-1.4l1.4-1.4a1 1 0 1 1 1.4 1.4L18.4 7A1 1 0 0 1 17 7Z"/></svg>
+    </button>
+  </div>
+  <input type="file" id="input-image-file" accept="image/jpeg,image/png,image/webp,image/bmp,image/jpg" hidden>
+  <input type="file" id="input-backup-file" accept="application/json,.json" hidden>
+</header>
 
-      <div class="app-header__actions">
-        <!-- 吸管工具：优先调用浏览器 EyeDropper API，不支持时自动降级为图片取色 -->
-        <button id="eyedropperBtn" class="btn btn--icon" type="button" title="屏幕吸管取色" aria-label="屏幕吸管取色">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M11 9 3 17v4h4l8-8" stroke-linecap="round" stroke-linejoin="round"></path>
-            <path d="M14 6l4-4 4 4-4 4-4-4z"></path>
-          </svg>
-        </button>
+<!-- ============ 主体 ============ -->
+<div class="workspace">
 
-        <!-- 撤销 / 重做（历史颜色导航） -->
-        <button id="undoColorBtn" class="btn btn--icon" type="button" title="上一个颜色" aria-label="上一个颜色">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M9 14l-4-4 4-4" stroke-linecap="round" stroke-linejoin="round"></path>
-            <path d="M5 10h9a5 5 0 0 1 0 10h-1" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
-        </button>
+  <!-- 左侧导航 -->
+  <nav class="sidenav" id="sidenav">
+    <button class="nav-item active" data-panel="picker">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 2a8 8 0 0 1 8 8h-8V4Z"/></svg>
+      <span>调色</span>
+    </button>
+    <button class="nav-item" data-panel="image">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M20 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm-2 12H6l3.5-4.5 2.5 3 3.5-4.5L18 17ZM8 10.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>
+      <span>图片吸色</span>
+    </button>
+    <button class="nav-item" data-panel="palette">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10c0-1.1-.9-2-2-2h-2.3A2.7 2.7 0 0 1 15 7.3V5a3 3 0 0 0-3-3Zm-5 10a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3-5.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>
+      <span>配色方案</span>
+    </button>
+    <button class="nav-item" data-panel="gradient">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M2 5h20v14H2V5Zm2 2v10h16V7H4Z"/><path fill="currentColor" d="M4 7h16v10H4V7Z" opacity="0.35"/><path fill="currentColor" d="M4 7h8v10H4V7Z"/></svg>
+      <span>渐变</span>
+    </button>
+    <button class="nav-item" data-panel="contrast">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 2v16a8 8 0 0 1 0-16Z"/></svg>
+      <span>对比度</span>
+    </button>
+    <button class="nav-item" data-panel="swatches">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 3a4 4 0 1 1 7 3.5A4 4 0 0 1 13 16Z"/></svg>
+      <span>色板库</span>
+    </button>
+  </nav>
 
-        <!-- 主题切换：浅色 / 深色 / 跟随系统 -->
-        <div class="theme-switch" id="themeSwitch" role="group" aria-label="主题切换">
-          <button class="theme-switch__btn" data-theme-mode="light" type="button" title="浅色模式">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke-linecap="round"></path></svg>
-          </button>
-          <button class="theme-switch__btn is-active" data-theme-mode="dark" type="button" title="深色模式">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M20.7 14.7A9 9 0 1 1 9.3 3.3a7 7 0 0 0 11.4 11.4z"></path></svg>
-          </button>
-          <button class="theme-switch__btn" data-theme-mode="auto" type="button" title="跟随系统">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="13" rx="2"></rect><path d="M8 21h8M12 17v4" stroke-linecap="round"></path></svg>
-          </button>
+  <!-- 中间工作区 -->
+  <main class="stage" id="stage">
+
+    <!-- ===== 调色面板 ===== -->
+    <section class="panel active" id="panel-picker">
+      <div class="card picker-card">
+        <div class="card-title">
+          <h3>二维颜色选择器</h3>
+          <span class="hint">横向 饱和度 · 纵向 明度 · 右侧 色相 · 下方 透明度</span>
         </div>
-      </div>
-    </header>
-
-    <!-- ========================= 主工作区 ========================= -->
-    <main class="app-main">
-
-      <!-- ----------------- 左侧：大型二维颜色选择器区域 ----------------- -->
-      <section class="picker-panel" aria-label="颜色选择器">
-
-        <div class="picker-panel__stage">
-          <!-- Saturation × Value 二维选色区（Canvas 绘制） -->
-          <div class="sv-picker" id="svPicker">
-            <canvas id="svCanvas" class="sv-picker__canvas"></canvas>
-            <div class="sv-picker__cursor" id="svCursor"></div>
+        <div class="sv-wrap">
+          <div class="sv-panel" id="sv-panel" tabindex="0" role="slider" aria-label="饱和度与明度选择区">
+            <div class="sv-cursor" id="sv-cursor"></div>
           </div>
-
-          <!-- Hue 色相竖向滑条（Canvas 绘制） -->
-          <div class="hue-slider" id="hueSlider">
-            <canvas id="hueCanvas" class="hue-slider__canvas"></canvas>
-            <div class="hue-slider__thumb" id="hueThumb"></div>
+          <div class="hue-track" id="hue-track">
+            <div class="hue-thumb" id="hue-thumb"></div>
           </div>
-
-          <!-- Alpha 透明度滑条（棋盘背景 + Canvas 绘制） -->
-          <div class="alpha-slider" id="alphaSlider">
-            <canvas id="alphaCanvas" class="alpha-slider__canvas"></canvas>
-            <div class="alpha-slider__thumb" id="alphaThumb"></div>
-          </div>
-        </div>
-
-        <!-- 缩放控制（二维选色区支持缩放） -->
-        <div class="picker-panel__zoom">
-          <button id="zoomOutBtn" class="btn btn--icon btn--sm" type="button" title="缩小">－</button>
-          <span id="zoomLabel" class="picker-panel__zoom-label">100%</span>
-          <button id="zoomInBtn" class="btn btn--icon btn--sm" type="button" title="放大">＋</button>
-          <button id="zoomResetBtn" class="btn btn--text btn--sm" type="button" title="重置缩放">重置</button>
-        </div>
-      </section>
-
-      <!-- ----------------- 右侧：颜色预览 + 数值输入 ----------------- -->
-      <section class="info-panel" aria-label="颜色数值与预览">
-
-        <!-- 颜色预览（含透明棋盘底 + 新旧对比） -->
-        <div class="color-preview">
-          <div class="color-preview__swatch">
-            <div class="color-preview__checker" aria-hidden="true"></div>
-            <div class="color-preview__current" id="colorPreviewCurrent"></div>
-          </div>
-          <div class="color-preview__meta">
-            <div class="color-preview__hex-row">
-              <input id="hexInput" class="input input--hex" type="text" maxlength="9" spellcheck="false" aria-label="HEX 颜色值" value="#3B82F6" />
-              <button class="btn btn--icon copy-btn" data-format="hex" type="button" title="复制 HEX">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
-              </button>
-            </div>
-            <button id="addFavoriteBtn" class="btn btn--text btn--sm" type="button">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5-4.7-4.6 6.5-.9L12 3z" stroke-linejoin="round"></path></svg>
-              收藏此颜色
-            </button>
-          </div>
-        </div>
-
-        <!-- 颜色数值输入组（HEX / RGB / HSL / HSV / CMYK / LAB / XYZ 全部可编辑，双向同步） -->
-        <div class="value-groups" id="valueGroups">
-
-          <div class="value-group" data-model="rgb">
-            <div class="value-group__header">
-              <span class="value-group__title">RGB / RGBA</span>
-              <button class="btn btn--icon-xs copy-btn" data-format="rgb" type="button" title="复制 RGB">⧉</button>
-              <button class="btn btn--icon-xs copy-btn" data-format="rgba" type="button" title="复制 RGBA">⧉A</button>
-            </div>
-            <div class="value-group__fields">
-              <label class="field"><span>R</span><input id="rgbR" class="input input--num" type="number" min="0" max="255" value="59" /></label>
-              <label class="field"><span>G</span><input id="rgbG" class="input input--num" type="number" min="0" max="255" value="130" /></label>
-              <label class="field"><span>B</span><input id="rgbB" class="input input--num" type="number" min="0" max="255" value="246" /></label>
-              <label class="field"><span>A</span><input id="rgbA" class="input input--num" type="number" min="0" max="100" value="100" /></label>
-            </div>
-          </div>
-
-          <div class="value-group" data-model="hsl">
-            <div class="value-group__header">
-              <span class="value-group__title">HSL</span>
-              <button class="btn btn--icon-xs copy-btn" data-format="hsl" type="button" title="复制 HSL">⧉</button>
-            </div>
-            <div class="value-group__fields">
-              <label class="field"><span>H</span><input id="hslH" class="input input--num" type="number" min="0" max="360" value="217" /></label>
-              <label class="field"><span>S</span><input id="hslS" class="input input--num" type="number" min="0" max="100" value="92" /></label>
-              <label class="field"><span>L</span><input id="hslL" class="input input--num" type="number" min="0" max="100" value="60" /></label>
-            </div>
-          </div>
-
-          <div class="value-group" data-model="hsv">
-            <div class="value-group__header">
-              <span class="value-group__title">HSV / HSB</span>
-              <button class="btn btn--icon-xs copy-btn" data-format="hsv" type="button" title="复制 HSV">⧉</button>
-            </div>
-            <div class="value-group__fields">
-              <label class="field"><span>H</span><input id="hsvH" class="input input--num" type="number" min="0" max="360" value="217" /></label>
-              <label class="field"><span>S</span><input id="hsvS" class="input input--num" type="number" min="0" max="100" value="76" /></label>
-              <label class="field"><span>V</span><input id="hsvV" class="input input--num" type="number" min="0" max="100" value="96" /></label>
-            </div>
-          </div>
-
-          <div class="value-group" data-model="cmyk">
-            <div class="value-group__header">
-              <span class="value-group__title">CMYK</span>
-              <button class="btn btn--icon-xs copy-btn" data-format="cmyk" type="button" title="复制 CMYK">⧉</button>
-            </div>
-            <div class="value-group__fields">
-              <label class="field"><span>C</span><input id="cmykC" class="input input--num" type="number" min="0" max="100" value="76" /></label>
-              <label class="field"><span>M</span><input id="cmykM" class="input input--num" type="number" min="0" max="100" value="47" /></label>
-              <label class="field"><span>Y</span><input id="cmykY" class="input input--num" type="number" min="0" max="100" value="0" /></label>
-              <label class="field"><span>K</span><input id="cmykK" class="input input--num" type="number" min="0" max="100" value="4" /></label>
-            </div>
-          </div>
-
-          <div class="value-group" data-model="lab">
-            <div class="value-group__header">
-              <span class="value-group__title">LAB</span>
-              <button class="btn btn--icon-xs copy-btn" data-format="lab" type="button" title="复制 LAB">⧉</button>
-            </div>
-            <div class="value-group__fields">
-              <label class="field"><span>L</span><input id="labL" class="input input--num" type="number" step="0.1" value="55.4" /></label>
-              <label class="field"><span>a</span><input id="labA" class="input input--num" type="number" step="0.1" value="7.6" /></label>
-              <label class="field"><span>b</span><input id="labB" class="input input--num" type="number" step="0.1" value="-58.4" /></label>
-            </div>
-          </div>
-
-          <div class="value-group" data-model="xyz">
-            <div class="value-group__header">
-              <span class="value-group__title">XYZ</span>
-              <button class="btn btn--icon-xs copy-btn" data-format="xyz" type="button" title="复制 XYZ">⧉</button>
-            </div>
-            <div class="value-group__fields">
-              <label class="field"><span>X</span><input id="xyzX" class="input input--num" type="number" step="0.01" value="24.05" /></label>
-              <label class="field"><span>Y</span><input id="xyzY" class="input input--num" type="number" step="0.01" value="23.29" /></label>
-              <label class="field"><span>Z</span><input id="xyzZ" class="input input--num" type="number" step="0.01" value="88.68" /></label>
-            </div>
-          </div>
-        </div>
-
-        <!-- 更多格式一键复制（代码片段） -->
-        <div class="code-copy-group">
-          <span class="code-copy-group__title">代码片段复制</span>
-          <div class="code-copy-group__grid">
-            <button class="btn btn--chip copy-btn" data-format="css" type="button">CSS</button>
-            <button class="btn btn--chip copy-btn" data-format="scss" type="button">SCSS</button>
-            <button class="btn btn--chip copy-btn" data-format="less" type="button">LESS</button>
-            <button class="btn btn--chip copy-btn" data-format="tailwind" type="button">Tailwind</button>
-            <button class="btn btn--chip copy-btn" data-format="flutter" type="button">Flutter</button>
-            <button class="btn btn--chip copy-btn" data-format="swiftui" type="button">SwiftUI</button>
-            <button class="btn btn--chip copy-btn" data-format="androidxml" type="button">Android XML</button>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <!-- ========================= 底部功能面板（选项卡） ========================= -->
-    <section class="side-panel" aria-label="功能面板">
-      <nav class="side-panel__tabs" id="sidePanelTabs" role="tablist">
-        <button class="side-panel__tab is-active" data-tab="palette" type="button" role="tab" aria-selected="true">配色生成</button>
-        <button class="side-panel__tab" data-tab="history" type="button" role="tab" aria-selected="false">历史记录</button>
-        <button class="side-panel__tab" data-tab="favorites" type="button" role="tab" aria-selected="false">收藏颜色</button>
-        <button class="side-panel__tab" data-tab="image" type="button" role="tab" aria-selected="false">图片取色</button>
-        <button class="side-panel__tab" data-tab="contrast" type="button" role="tab" aria-selected="false">对比度检测</button>
-        <button class="side-panel__tab" data-tab="export" type="button" role="tab" aria-selected="false">导出</button>
-      </nav>
-
-      <!-- ----------------- 配色生成 ----------------- -->
-      <div class="side-panel__content is-active" id="paletteTabContent" data-tab-content="palette" role="tabpanel">
-        <div class="palette-controls" id="paletteControls">
-          <button class="btn btn--chip is-active" data-harmony="complementary" type="button">互补色</button>
-          <button class="btn btn--chip" data-harmony="analogous" type="button">邻近色</button>
-          <button class="btn btn--chip" data-harmony="triadic" type="button">三角色</button>
-          <button class="btn btn--chip" data-harmony="tetradic" type="button">四色</button>
-          <button class="btn btn--chip" data-harmony="pentadic" type="button">五角色</button>
-          <button class="btn btn--chip" data-harmony="splitComplementary" type="button">分裂互补</button>
-          <button class="btn btn--chip" data-harmony="monochromatic" type="button">单色</button>
-          <button class="btn btn--chip" data-harmony="gradient" type="button">渐变</button>
-          <button class="btn btn--chip" data-harmony="material" type="button">Material 配色</button>
-        </div>
-        <div class="palette-results" id="paletteResults"></div>
-      </div>
-
-      <!-- ----------------- 历史记录 ----------------- -->
-      <div class="side-panel__content" id="historyTabContent" data-tab-content="history" role="tabpanel" hidden>
-        <div class="panel-toolbar">
-          <span class="panel-toolbar__hint">最近使用的颜色会自动保存在本地浏览器中</span>
-          <button id="clearHistoryBtn" class="btn btn--text btn--sm" type="button">清空历史</button>
-        </div>
-        <div class="swatch-grid" id="historyList"></div>
-      </div>
-
-      <!-- ----------------- 收藏颜色 ----------------- -->
-      <div class="side-panel__content" id="favoritesTabContent" data-tab-content="favorites" role="tabpanel" hidden>
-        <div class="panel-toolbar">
-          <span class="panel-toolbar__hint">拖动色块可调整收藏顺序</span>
-          <button id="clearFavoritesBtn" class="btn btn--text btn--sm" type="button">清空收藏</button>
-        </div>
-        <div class="swatch-grid" id="favoritesList"></div>
-      </div>
-
-      <!-- ----------------- 图片取色 ----------------- -->
-      <div class="side-panel__content" id="imageTabContent" data-tab-content="image" role="tabpanel" hidden>
-        <div class="panel-toolbar">
-          <label class="btn btn--chip" for="imageUploadInput">上传图片</label>
-          <input id="imageUploadInput" type="file" accept="image/*" hidden />
-          <span class="panel-toolbar__hint">点击图片任意位置即可吸取颜色</span>
-        </div>
-        <div class="image-picker" id="imagePickerStage">
-          <canvas id="imageCanvas" class="image-picker__canvas"></canvas>
-          <div class="image-picker__placeholder" id="imagePickerPlaceholder">尚未上传图片</div>
-          <div class="image-picker__loupe" id="imageLoupe" hidden></div>
-        </div>
-      </div>
-
-      <!-- ----------------- 对比度检测 ----------------- -->
-      <div class="side-panel__content" id="contrastTabContent" data-tab-content="contrast" role="tabpanel" hidden>
-        <div class="contrast-panel">
-          <div class="contrast-panel__samples">
-            <div class="contrast-sample" id="contrastSampleBlack">
-              <span>黑色文字</span>
-              <strong id="contrastRatioBlack">--</strong>
-            </div>
-            <div class="contrast-sample" id="contrastSampleWhite">
-              <span>白色文字</span>
-              <strong id="contrastRatioWhite">--</strong>
-            </div>
-          </div>
-          <div class="contrast-panel__report" id="contrastReport">
-            <div class="contrast-report__row">
-              <span>推荐文字颜色</span>
-              <strong id="contrastBestText">--</strong>
-            </div>
-            <div class="contrast-report__row">
-              <span>WCAG AA（正文）</span>
-              <strong id="contrastAAText">--</strong>
-            </div>
-            <div class="contrast-report__row">
-              <span>WCAG AA（大字号）</span>
-              <strong id="contrastAALarge">--</strong>
-            </div>
-            <div class="contrast-report__row">
-              <span>WCAG AAA（正文）</span>
-              <strong id="contrastAAAText">--</strong>
-            </div>
-            <div class="contrast-report__row">
-              <span>WCAG AAA（大字号）</span>
-              <strong id="contrastAAALarge">--</strong>
-            </div>
+          <div class="alpha-track checker" id="alpha-track">
+            <div class="alpha-fill" id="alpha-fill"></div>
+            <div class="alpha-thumb" id="alpha-thumb"></div>
           </div>
         </div>
       </div>
 
-      <!-- ----------------- 导出 ----------------- -->
-      <div class="side-panel__content" id="exportTabContent" data-tab-content="export" role="tabpanel" hidden>
-        <div class="panel-toolbar">
-          <span class="panel-toolbar__hint">导出内容将基于当前的“配色生成”结果与当前颜色</span>
+      <div class="channel-grid">
+        <div class="card channel-card" id="card-rgb">
+          <div class="card-title"><h3>RGB</h3><code id="rgb-head">0 / 0 / 0</code></div>
+          <div class="channel-row" data-ch="r">
+            <label class="ch-label ch-r">R</label>
+            <input type="range" min="0" max="255" class="ch-range" id="range-r">
+            <input type="number" min="0" max="255" class="ch-number" id="number-r">
+          </div>
+          <div class="channel-row" data-ch="g">
+            <label class="ch-label ch-g">G</label>
+            <input type="range" min="0" max="255" class="ch-range" id="range-g">
+            <input type="number" min="0" max="255" class="ch-number" id="number-g">
+          </div>
+          <div class="channel-row" data-ch="b">
+            <label class="ch-label ch-b">B</label>
+            <input type="range" min="0" max="255" class="ch-range" id="range-b">
+            <input type="number" min="0" max="255" class="ch-number" id="number-b">
+          </div>
+          <div class="channel-row" data-ch="a">
+            <label class="ch-label ch-a">A</label>
+            <input type="range" min="0" max="100" class="ch-range" id="range-a-rgb">
+            <input type="number" min="0" max="100" class="ch-number" id="number-a-rgb">
+          </div>
         </div>
-        <div class="export-controls">
-          <button class="btn btn--chip export-btn" data-export="css" type="button">CSS 变量 (.css)</button>
-          <button class="btn btn--chip export-btn" data-export="scss" type="button">SCSS 变量 (.scss)</button>
-          <button class="btn btn--chip export-btn" data-export="less" type="button">LESS 变量 (.less)</button>
-          <button class="btn btn--chip export-btn" data-export="json" type="button">JSON (.json)</button>
-          <button class="btn btn--chip export-btn" data-export="ase" type="button">Adobe Swatch (.ase)</button>
-          <button class="btn btn--chip export-btn" data-export="gpl" type="button">GIMP 调色板 (.gpl)</button>
-          <button class="btn btn--chip export-btn" data-export="txt" type="button">纯文本 (.txt)</button>
+
+        <div class="card channel-card" id="card-hsl">
+          <div class="card-title"><h3>HSL</h3><code id="hsl-head">0° / 0% / 0%</code></div>
+          <div class="channel-row" data-ch="h">
+            <label class="ch-label">H</label>
+            <input type="range" min="0" max="360" class="ch-range" id="range-hsl-h">
+            <input type="number" min="0" max="360" class="ch-number" id="number-hsl-h">
+          </div>
+          <div class="channel-row" data-ch="s">
+            <label class="ch-label">S</label>
+            <input type="range" min="0" max="100" class="ch-range" id="range-hsl-s">
+            <input type="number" min="0" max="100" class="ch-number" id="number-hsl-s">
+          </div>
+          <div class="channel-row" data-ch="l">
+            <label class="ch-label">L</label>
+            <input type="range" min="0" max="100" class="ch-range" id="range-hsl-l">
+            <input type="number" min="0" max="100" class="ch-number" id="number-hsl-l">
+          </div>
+        </div>
+
+        <div class="card channel-card" id="card-hsv">
+          <div class="card-title"><h3>HSV / HSB</h3><code id="hsv-head">0° / 0% / 0%</code></div>
+          <div class="channel-row" data-ch="h">
+            <label class="ch-label">H</label>
+            <input type="range" min="0" max="360" class="ch-range" id="range-hsv-h">
+            <input type="number" min="0" max="360" class="ch-number" id="number-hsv-h">
+          </div>
+          <div class="channel-row" data-ch="s">
+            <label class="ch-label">S</label>
+            <input type="range" min="0" max="100" class="ch-range" id="range-hsv-s">
+            <input type="number" min="0" max="100" class="ch-number" id="number-hsv-s">
+          </div>
+          <div class="channel-row" data-ch="v">
+            <label class="ch-label">V</label>
+            <input type="range" min="0" max="100" class="ch-range" id="range-hsv-v">
+            <input type="number" min="0" max="100" class="ch-number" id="number-hsv-v">
+          </div>
+        </div>
+
+        <div class="card channel-card" id="card-cmyk">
+          <div class="card-title"><h3>CMYK <span class="print-tag">印刷参考</span></h3><code id="cmyk-head">0% / 0% / 0% / 0%</code></div>
+          <div class="channel-row" data-ch="c">
+            <label class="ch-label ch-c">C</label>
+            <input type="range" min="0" max="100" class="ch-range" id="range-cmyk-c">
+            <input type="number" min="0" max="100" class="ch-number" id="number-cmyk-c">
+          </div>
+          <div class="channel-row" data-ch="m">
+            <label class="ch-label ch-m">M</label>
+            <input type="range" min="0" max="100" class="ch-range" id="range-cmyk-m">
+            <input type="number" min="0" max="100" class="ch-number" id="number-cmyk-m">
+          </div>
+          <div class="channel-row" data-ch="y">
+            <label class="ch-label ch-y">Y</label>
+            <input type="range" min="0" max="100" class="ch-range" id="range-cmyk-y">
+            <input type="number" min="0" max="100" class="ch-number" id="number-cmyk-y">
+          </div>
+          <div class="channel-row" data-ch="k">
+            <label class="ch-label ch-k">K</label>
+            <input type="range" min="0" max="100" class="ch-range" id="range-cmyk-k">
+            <input type="number" min="0" max="100" class="ch-number" id="number-cmyk-k">
+          </div>
+          <p class="print-notice" id="print-notice">提示：不同显示器、ICC 配置、印刷设备和纸张会造成实际颜色差异，CMYK 转换结果仅供参考。RGB 适合屏幕显示，CMYK 适合印刷参考。</p>
         </div>
       </div>
     </section>
+
+    <!-- ===== 图片吸色面板 ===== -->
+    <section class="panel" id="panel-image">
+      <div class="card image-card">
+        <div class="card-title">
+          <h3>图片吸色</h3>
+          <div class="seg">
+            <button class="seg-btn active" data-analysis="5">TOP 5</button>
+            <button class="seg-btn" data-analysis="10">TOP 10</button>
+            <button class="seg-btn" data-analysis="20">TOP 20</button>
+          </div>
+        </div>
+        <div class="drop-zone" id="drop-zone">
+          <svg viewBox="0 0 24 24" width="46" height="46"><path fill="currentColor" d="M19 13v6H5v-6H3v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6h-2ZM11 4.8 7.9 7.9 6.5 6.5 12 1l5.5 5.5-1.4 1.4L13 4.8V16h-2V4.8Z"/></svg>
+          <p><strong>拖入图片即可开始吸色</strong></p>
+          <span>支持 JPG / JPEG / PNG / WEBP / BMP</span>
+          <button class="btn btn-primary" id="btn-pick-image-file">选择图片</button>
+        </div>
+        <div class="image-workspace" id="image-workspace" hidden>
+          <canvas id="image-canvas"></canvas>
+          <div class="loupe" id="loupe" hidden>
+            <canvas id="loupe-canvas" width="238" height="238"></canvas>
+            <div class="loupe-info" id="loupe-info">
+              <strong id="loupe-rgb">RGB —</strong>
+              <code id="loupe-hex">#——</code>
+            </div>
+          </div>
+          <div class="image-toolbar">
+            <button class="btn btn-small" id="btn-repick-image">重新选择图片</button>
+            <button class="btn btn-small" id="btn-save-image-scheme">保存吸取颜色为色板</button>
+            <span class="hint">移动鼠标查看放大镜，点击图片吸取像素颜色</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><h3>图片主要颜色分析</h3><span class="hint">点击颜色设为当前颜色</span></div>
+        <div class="analysis-list" id="analysis-list">
+          <div class="empty-tip">导入图片后自动分析主要颜色及占比</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><h3>本图已吸取颜色</h3><span class="hint">自动组成图片配色方案</span></div>
+        <div class="mini-swatches" id="image-picked-list">
+          <div class="empty-tip">在图片上点击即可吸取颜色</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 配色方案面板 ===== -->
+    <section class="panel" id="panel-palette">
+      <div class="card ratio-card">
+        <div class="card-title"><h3>60 / 30 / 10 配色预览</h3><span class="hint">主色 60% · 辅助色 30% · 强调色 10%</span></div>
+        <div class="ratio-ui" id="ratio-ui">
+          <div class="ratio-header" id="ratio-header">
+            <span class="ratio-logo">Brand</span>
+            <span class="ratio-nav">首页 · 产品 · 关于</span>
+            <span class="ratio-btn" id="ratio-btn">立即开始</span>
+          </div>
+          <div class="ratio-body">
+            <div class="ratio-side" id="ratio-side">
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <div class="ratio-main" id="ratio-main">
+              <h4>标题文字 Heading</h4>
+              <p>正文内容区域，用于展示 60% 主色、30% 辅助色与 10% 强调色的搭配效果。</p>
+              <button class="ratio-cta" id="ratio-cta">强调按钮</button>
+            </div>
+          </div>
+        </div>
+        <div class="ratio-legend">
+          <span><i id="legend-primary"></i>主色 60%</span>
+          <span><i id="legend-secondary"></i>辅助色 30%</span>
+          <span><i id="legend-accent"></i>强调色 10%</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><h3>自动配色方案</h3><span class="hint">点击色块使用 · 卡片按钮可复制 / 收藏整组</span></div>
+        <div class="scheme-grid" id="scheme-grid"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <h3>明暗色阶（UI 色阶 50–900）</h3>
+          <button class="btn btn-small" id="btn-copy-tailwind">复制 Tailwind 色阶</button>
+        </div>
+        <div class="shade-row" id="shade-row"></div>
+      </div>
+    </section>
+
+    <!-- ===== 渐变面板 ===== -->
+    <section class="panel" id="panel-gradient">
+      <div class="card gradient-card">
+        <div class="card-title">
+          <h3>渐变生成器</h3>
+          <div class="gradient-controls">
+            <div class="seg">
+              <button class="seg-btn active" data-grad="linear">线性</button>
+              <button class="seg-btn" data-grad="radial">径向</button>
+            </div>
+            <label class="angle-control" id="angle-control">角度
+              <input type="number" id="gradient-angle" min="0" max="360" value="90">°
+            </label>
+          </div>
+        </div>
+        <div class="gradient-preview" id="gradient-preview"></div>
+        <div class="gradient-stops" id="gradient-stops"></div>
+        <div class="gradient-actions">
+          <button class="btn btn-primary" id="btn-add-stop">+ 添加颜色节点</button>
+          <span class="hint">支持 2–5 个颜色节点，点击色块可修改颜色</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><h3>CSS 代码</h3>
+          <button class="btn btn-small" id="btn-copy-gradient-css">复制 CSS</button>
+        </div>
+        <textarea class="code-box" id="gradient-css" readonly rows="3"></textarea>
+      </div>
+    </section>
+
+    <!-- ===== 对比度面板 ===== -->
+    <section class="panel" id="panel-contrast">
+      <div class="card contrast-card">
+        <div class="card-title"><h3>WCAG 色彩对比度检测</h3></div>
+        <div class="contrast-pickers">
+          <div class="contrast-pick">
+            <span class="cp-label">前景色（文字）</span>
+            <div class="cp-swatch checker"><div class="cp-color" id="fg-color"></div></div>
+            <code id="fg-hex">#333333</code>
+            <button class="btn btn-small" id="btn-pick-fg">拾取当前颜色</button>
+          </div>
+          <button class="btn icon-only contrast-swap" id="btn-swap-fgbg" title="交换前景与背景">
+            <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M8 7 4 11l4 4v-3h8V9H8V7Zm8 10 4-4-4-4v3H8v2h8v3Z"/></svg>
+          </button>
+          <div class="contrast-pick">
+            <span class="cp-label">背景色</span>
+            <div class="cp-swatch checker"><div class="cp-color" id="bg-color"></div></div>
+            <code id="bg-hex">#FFFFFF</code>
+            <button class="btn btn-small" id="btn-pick-bg">拾取当前颜色</button>
+          </div>
+        </div>
+
+        <div class="contrast-result">
+          <div class="ratio-number" id="contrast-ratio">—</div>
+          <div class="pass-grid">
+            <div class="pass-item" id="pass-normal-aa"><span>普通文字 AA</span><strong>—</strong></div>
+            <div class="pass-item" id="pass-large-aa"><span>大号文字 AA</span><strong>—</strong></div>
+            <div class="pass-item" id="pass-normal-aaa"><span>普通文字 AAA</span><strong>—</strong></div>
+            <div class="pass-item" id="pass-large-aaa"><span>大号文字 AAA</span><strong>—</strong></div>
+          </div>
+        </div>
+
+        <div class="contrast-preview-box">
+          <div class="cp-text small" id="cp-preview-small">小号文字 The quick brown fox 14px</div>
+          <div class="cp-text large" id="cp-preview-large">大号文字 Large Text 24px Bold</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><h3>文字颜色智能建议</h3><span class="hint">基于当前背景色推荐黑 / 白文字</span></div>
+        <div class="text-suggest" id="text-suggest"></div>
+      </div>
+    </section>
+
+    <!-- ===== 色板库面板 ===== -->
+    <section class="panel" id="panel-swatches">
+      <div class="card">
+        <div class="card-title">
+          <div class="seg">
+            <button class="seg-btn active" data-lib="fav">收藏颜色</button>
+            <button class="seg-btn" data-lib="brand">品牌色板</button>
+          </div>
+          <button class="btn btn-primary btn-small" id="btn-add-fav">收藏当前颜色</button>
+        </div>
+
+        <div id="lib-fav">
+          <div class="swatch-grid" id="fav-grid">
+            <div class="empty-tip">点击右侧"收藏当前颜色"或按 Ctrl+S 保存颜色</div>
+          </div>
+        </div>
+
+        <div id="lib-brand" hidden>
+          <div class="brand-manager">
+            <div class="brand-list" id="brand-list"></div>
+            <div class="brand-ops">
+              <button class="btn btn-small" id="btn-new-brand">新建色板</button>
+              <button class="btn btn-small" id="btn-rename-brand">重命名</button>
+              <button class="btn btn-small btn-danger" id="btn-delete-brand">删除色板</button>
+              <button class="btn btn-small btn-primary" id="btn-add-brand-color">添加当前颜色</button>
+            </div>
+          </div>
+          <div class="swatch-grid" id="brand-color-grid">
+            <div class="empty-tip">先新建或选择一个色板</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 右侧颜色信息 -->
+  <aside class="infopanel" id="infopanel">
+    <div class="card info-preview-card">
+      <div class="info-name-row">
+        <input type="text" id="current-name" class="current-name" value="" placeholder="自动颜色名称" title="自定义颜色名称">
+        <button class="star-btn" id="btn-favorite-star" title="收藏 / 取消收藏">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="m12 17.3-6.2 3.7 1.6-7L2 9.2l7.1-.6L12 2l2.9 6.6 7.1.6-5.4 4.8 1.6 7L12 17.3Z"/></svg>
+        </button>
+      </div>
+      <div class="checker current-preview"><div class="current-preview-color" id="current-preview-color"></div></div>
+      <div class="quick-ops">
+        <button class="btn btn-small" id="btn-invert">反转颜色</button>
+        <button class="btn btn-small" id="btn-random">随机颜色</button>
+        <button class="btn btn-small" id="btn-copy-hex">复制 HEX</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>输入颜色代码</h3></div>
+      <input type="text" class="color-input" id="color-input" placeholder="#FF0000 / rgb(...) / hsl(...) / cmyk(...)" spellcheck="false">
+      <p class="input-hint" id="input-hint">支持 HEX / RGB / RGBA / HSL / HSV / CMYK，回车应用</p>
+    </div>
+
+    <div class="card value-card">
+      <div class="card-title"><h3>色彩数值</h3><span class="hint">点击复制</span></div>
+      <div class="value-list" id="value-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>代码输出</h3></div>
+      <div class="code-ops">
+        <button class="btn btn-small" id="btn-copy-css-vars">复制 CSS 变量</button>
+        <button class="btn btn-small" id="btn-copy-tailwind2">复制 Tailwind 配置</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ============ 底部历史记录 ============ -->
+<footer class="historybar">
+  <div class="history-head">
+    <strong>历史记录</strong>
+    <button class="btn btn-small btn-danger-ghost" id="btn-clear-history">清空</button>
+  </div>
+  <div class="history-track" id="history-track"></div>
+  <button class="btn icon-only panel-toggle" id="btn-toggle-info" title="显示 / 隐藏颜色数值面板">
+    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 5h18v2H3V5Zm0 6h18v2H3v-2Zm0 6h18v2H3v-2Z"/></svg>
+  </button>
+</footer>
+
+<!-- ============ 设置模态 ============ -->
+<div class="modal-overlay" id="modal-overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" id="modal-settings-box">
+    <div class="modal-head">
+      <h3 id="modal-title">设置</h3>
+      <button class="btn icon-only" id="btn-close-modal"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4 6.4 5Z"/></svg></button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <div class="setting-row">
+        <label for="set-history-limit">历史记录数量</label>
+        <select id="set-history-limit">
+          <option value="30">最近 30 个</option>
+          <option value="50">最近 50 个</option>
+          <option value="100">最近 100 个</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label for="set-print-notice">显示印刷色彩提醒</label>
+        <input type="checkbox" id="set-print-notice">
+      </div>
+      <div class="setting-row">
+        <label for="set-theme">界面主题</label>
+        <select id="set-theme">
+          <option value="light">浅色模式</option>
+          <option value="dark">深色模式</option>
+        </select>
+      </div>
+      <div class="setting-row setting-actions">
+        <button class="btn" id="btn-export-backup">导出全部数据 (JSON)</button>
+        <button class="btn" id="btn-import-backup">导入数据恢复 (JSON)</button>
+      </div>
+      <div class="setting-row setting-actions">
+        <button class="btn btn-danger" id="btn-clear-all-data">清空全部本地数据</button>
+      </div>
+      <p class="setting-note">所有数据仅保存在本机浏览器 LocalStorage 中，软件完全离线运行，不上传任何数据。</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" id="btn-done-modal">完成</button>
+    </div>
   </div>
 
-  <!-- 全局提示（复制成功等操作反馈） -->
-  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+  <!-- 通用输入弹窗 -->
+  <div class="modal modal-sm" id="modal-prompt-box" hidden>
+    <div class="modal-head"><h3 id="prompt-title">请输入</h3></div>
+    <div class="modal-body">
+      <input type="text" class="color-input" id="prompt-input">
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="prompt-cancel">取消</button>
+      <button class="btn btn-primary" id="prompt-ok">确定</button>
+    </div>
+  </div>
+</div>
 
-  <!-- ========================= 脚本引入（原生 ES6 模块，无需构建工具） ========================= -->
-  <script type="module" src="app.js"></script>
+<!-- Toast -->
+<div class="toast" id="toast" hidden></div>
+
+<script src="color.js"></script>
+<script src="palette.js"></script>
+<script src="storage.js"></script>
+<script src="export.js"></script>
+<script src="picker.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
